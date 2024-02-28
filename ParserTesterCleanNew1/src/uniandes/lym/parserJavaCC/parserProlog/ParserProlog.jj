@@ -1,0 +1,211 @@
+/**
+ * JavaCC file
+ */
+ 
+options {
+  IGNORE_CASE = false;
+  STATIC = false;
+}
+PARSER_BEGIN(ParserProlog)
+package uniandes.lym.parserJavaCC.parserProlog;
+
+
+import java.util.*;
+
+public class ParserProlog {
+
+  
+
+}
+
+
+PARSER_END(ParserProlog)
+
+SKIP :
+{
+ 	" " | "\r" | "\t" | "\n"
+}
+TOKEN : /* OPERATORS */
+{
+    <ARROW: ":-">
+  | < Symbol1: "< >" >
+  | < Symbol2: "!" >
+  
+}
+TOKEN: {
+   <#CH: ~["\""] >//any character except quote
+|  <QUOTED: "\""  ( < CH > )* "\"" >
+}
+
+ 
+TOKEN : // numbers, atoms and variables
+{
+    < INT: ( <DIGIT> )+ >
+|   < #DIGIT: "0" | "1" | "2"| "3" | "4" | "5" |  "6" | "7" | "8" |"9" >
+|   < #UPPER: ["A"-"Z"] >
+|   < #LOWER: ["a"-"z"] >
+|   < LOWER_NO_F_NO_C:"a"|"b"|"d"|"e"|"g"|"h"|"i"|"j"|"k"|"m"|"n"|"l"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z">
+|   < UPPER_NO_A:["B"-"Z"] >
+|   < LOWER_NO_A:["b"-"z"] >
+|   < UPPER_NO_I:"A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"J"|"K"|"M"|"N"|"L"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z">
+|   < LOWER_NO_I:"a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"j"|"k"|"m"|"n"|"l"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z">
+|   < UPPER_NO_L:"A"|"B"|"C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|"Y"|"Z">
+|   < LOWER_NO_L:"a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|"k"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|"u"|"v"|"w"|"x"|"y"|"z">
+|   < VAR: ( <UPPER>  ( <UPPER > | < LOWER > | < DIGIT > )* )>
+|   < ATOM1:(<LOWER_NO_F_NO_C>(<UPPER>|<LOWER>|<DIGIT>)*) >
+|   < ATOM2:("f"(<UPPER_NO_A>|<LOWER_NO_A>|<DIGIT>)*) >
+|   < ATOM3:(("f"("a"|"A")(<UPPER_NO_I>|<LOWER_NO_I>|<DIGIT>)*)>
+|   < ATOM4:("f"("A"|"a")("I"|"i")(<UPPER_NO_L>|<LOWER_NO_L>|<DIGIT>)*) >
+|   < ATOM5:"c"("a"|"A")(<UPPER_NO_L>|<LOWER_NO_L>|<DIGIT>)*)) >
+|   < ATOM: <ATOM1>|<ATOM2>|<ATOM3>|<ATOM4>|<ATOM5>>
+}
+
+TOKEN : //command words and symbols
+{
+  < COM1: "call" >
+| < COM2: " = .. " >
+| < COM3:" := " >
+| < COM4: " = " >
+| < COM5: " == " >
+}
+
+
+
+void hr():
+{}
+{
+  
+  functor() [< ARROW>  (D() ((","  D())*|"fail"))|", fail"] "."
+
+
+}
+
+void D() :
+{
+}
+{
+  functor()
+  |<Symbol2>
+  |command()
+} 
+
+
+void functor(): 
+{}
+{
+(
+  	< ATOM > ("(" arg() (","  arg())* ")")?
+)
+	
+}
+void arg():
+{}
+{
+  functor() | list() |< QUOTED >| exp()
+}
+
+void list() :
+{}
+
+{
+
+"[" (arg() (","  arg())* ("|" arg())?)? "]"}
+
+
+
+
+
+void exp() :
+{
+  }
+{
+// Parses  E -> E + T
+//         E -> E - T
+//         E -> T
+//   in EBNF:  E -> T {+ T   | - T }
+  
+ term() ( "+"term() 
+          | "-" term()  
+         )*
+}
+void term() :
+{
+}
+{
+// Parses  T -> T * F
+//         T -> T / F
+//         T -> F
+//   in EBNF:  T -> F {* F   | /  F }
+  
+ fact() ( "*"  fact()
+ 
+   
+ | "/" fact()
+  
+
+ )*
+}
+void fact() :
+{
+// Parses  F -> B
+//         F -> -F
+//         B -> num
+//         B -> '(' E ')'
+//         B -> var
+//   in EBNF:  F -> -F  |  (var |num |'(' E ')')
+//   we don't remove right recursion
+
+
+int  v,pos;
+ 
+}
+{
+
+   "-"  fact() 
+   |  variable() 
+   | num() 
+   |  "("exp() ")"
+                             
+}
+
+
+void num() :
+{	
+	
+}
+
+{
+	(token=<INT>)
+
+	
+}
+
+
+void variable() throws Error:
+{	
+	int pos,total=1;
+	Token token;
+}
+
+{
+	(token=<VAR>)
+
+}
+
+void command() :
+{
+  
+}
+
+{
+   <COM1>"("(<VAR>|functor())")"
+   | (<VAR>|functor())<COM2>(<VAR>|list())
+   | (<VAR>|<INT>)<COM3>exp()
+   | arg()<COM4>arg()
+   | arg()<COM5>arg()
+}
+
+ 
+
+
+  
